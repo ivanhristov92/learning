@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <style>
+                .calculator{
+                    margin-top: 20px;
+                    background: brown;
+                    box-shadow: 1px 1px 1px 1px black;
+                    border: 1px solid brown;
+                }
+
+                .field {
+                    background: white;
+                    height: 30px;
+                    width: 34.5%;
+                    border: 1px solid grey;
+                    box-shadow: 1px 2px 1px 1px;
+                    margin-bottom: 10px;
+                    border-radius: 15%;
+                }
+
+                .btn{
+                    margin-right: 2px;
+                    margin-bottom: 2px;
+                    box-shadow: 1px 2px 3px 2px black;
+                }
+        </style>
+    </head>
+    <body>
+     <div class="container-fluid">
+        <div class="well col-xs-6 col-xs-offset-3 calculator">
+            <div class="row">
+            <div class="field col-xs-4 col-xs-offset-4">
+            
+            </div>
+            </div>
+            <div class="row">
+                <button class="btn btn-primary col-xs-1 col-xs-offset-4" id="AC">C</button>
+                <button class="btn btn-primary col-xs-1" id="multiply">*</button>
+                <button class="btn btn-primary col-xs-1" id="divide">/</button>
+                <button class="btn btn-primary col-xs-1" id="C"><-</button>
+            </div>
+            <div class="row">
+                <button class="btn btn-primary col-xs-1 col-xs-offset-4 digits" id="1">1</button>
+                <button class="btn btn-primary col-xs-1 digits" id="2">2</button>
+                <button class="btn btn-primary col-xs-1 digits" id="3">3</button>
+                <button class="btn btn-primary col-xs-1" id="plus">+</button>  
+            </div>
+            <div class="row">
+                <button class="btn btn-primary col-xs-1 col-xs-offset-4 digits" id="4">4</button>
+                <button class="btn btn-primary col-xs-1 digits" id="5">5</button>
+                <button class="btn btn-primary col-xs-1 digits" id="6">6</button>
+                <button class="btn btn-primary col-xs-1" id="minus">-</button>  
+            </div>
+            <div class="row">
+                <button class="btn btn-primary col-xs-1 col-xs-offset-4 digits" id="7">7</button>
+                <button class="btn btn-primary col-xs-1 digits" id="8">8</button>
+                <button class="btn btn-primary col-xs-1 digits" id="9">9</button>
+                <button class="btn btn-primary col-xs-1" id="eq">=</button>  
+            </div>
+            <div class="row">
+                <button class="btn btn-primary col-xs-1 col-xs-offset-5 digits">0</button>
+            </div>
+        </div>
+        </div>
+        
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+        <!-- Latest compiled JavaScript -->
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                
+                //variables for calculations
+                var digs = [];
+                var joined;
+                // counting number of operations
+                var count = 0;
+                //turning digs[] into an INT
+                function join(){      
+                    joined = parseInt(digs.join(""));
+                }
+                var total = 0;
+                //logging values to the calculator screen
+                function display( val ){
+                    $('.field').html( val );
+                }
+                
+                // operations object
+                var operations = {
+                    adding: false,
+                    subtracting: false,
+                    multiplying: false,
+                    dividing: false
+                };
+                var keys = Object.keys(operations);
+                
+                //function showing which operation is being executed-addition, subtraction, etc.
+                function set( prop ){
+                    for( i=0; i<=keys.length-1; i++ ){
+                        if( keys[i] === prop ){
+                            operations[keys[i]] = true;
+                        } else {
+                            operations[keys[i]] = false;
+                        }
+                    } 
+                }
+                
+                function findSet(){
+                    for( i=0; i<=keys.length-1; i++ ){
+                        if( operations[keys[i]] === true ){
+                            return keys[i]; 
+                        }   
+                    }
+                }
+                
+                function unSetAll(){
+                    for( i=0; i<=keys.length-1; i++ ){
+                        operations[keys[i]] = false;
+                    }
+                }
+                
+                
+                //showing digits on screen
+                $('.digits').on('click', function(){
+                    digs.push($(this).text());
+                    join();
+                    display(joined);
+                });
+                
+                //Deleting last digit
+                $('#C').on('click', function(){
+                    digs.pop();
+                    join();
+                    display(joined);
+                });
+                
+                //Deleting all digits
+                $('#AC').on('click', function(){
+                    digs = [];
+                    total = 0;
+                    count = 0;
+                    unSetAll();
+                    join();
+                    display(joined);
+                });
+                
+                //Addition
+                $('#plus').on('click', function(){
+                
+                    function add(){
+                    set("adding");
+                    count ++;
+                    if( digs.length > 0 ){
+                        join();
+                        if( count === 1 ){
+                            total = joined;
+                            digs = [];
+                        } else {
+                            total += joined;
+                            digs = [];
+                        }
+                        
+                    }
+                    }
+                    
+                if(findSet()=== "adding"){
+                    add();
+                    display(total);
+                } else if(findSet() === "subtracting"){
+                    join();
+                    total -= joined;
+                    digs = [];
+                    add();
+                    display(total);
+                } else if( findSet()==="multiplying" ){
+                    join();
+                    total *= joined;
+                    digs = [];
+                    add();
+                    display(total);
+                } else if( findSet()==="dividing" ){
+                    join();
+                    total /= joined;
+                    digs = [];
+                    add();
+                    display(total);
+                } else {
+                    add();
+                    display(total);
+                }
+                });
+                
+                //Subtracting
+                $('#minus').on('click', function(){
+                    function subtract(){
+                    set("subtracting");
+                    count ++;
+                        if( digs.length >0 ){
+                        join();
+                        if( count === 1 ){
+                            total = joined;
+                            digs = [];
+                        } else {
+                            total -= joined;
+                            digs = [];
+                        }
+                    }
+                    }
+                    
+                    if(findSet()=== "subtracting"){
+                    subtract();
+                    display(total);
+                } else if(findSet() === "adding"){
+                    join();
+                    total += joined;
+                    digs = [];
+                    subtract();
+                    display(total);
+                } else if( findSet()==="multiplying" ){
+                    join();
+                    total *= joined;
+                    digs = [];
+                    subtract();
+                    display(total);
+                } else if( findSet()==="dividing" ){
+                    join();
+                    total /= joined;
+                    digs = [];
+                    subtract();
+                    display(total);
+                } else {
+                    subtract();
+                    display(total);
+                }
+                    
+                });
+                
+                    //Multiplication
+                $('#multiply').on('click', function(){
+                    
+                    function multiply(){
+                    set("multiplying");
+                    count ++;
+                    if( digs.length>0 ){
+                        join();
+                        if( count === 1){
+                            total = joined;
+                            digs = [];
+                        } else {
+                            total *= joined;
+                            digs = [];
+                        }
+                    }
+                    }
+                    
+                    if(findSet()=== "multiplying"){
+                    multiply();
+                    display(total);
+                } else if(findSet() === "subtracting"){
+                    join();
+                    total -= joined;
+                    digs = [];
+                    multiply();
+                    display(total);
+                } else if( findSet()==="adding" ){
+                    join();
+                    total += joined;
+                    digs = [];
+                    multiply();
+                    display(total);
+                } else if( findSet()==="dividing" ){
+                    join();
+                    total /= joined;
+                    digs = [];
+                    multiply();
+                    display(total);
+                } else {
+                    multiply();
+                    display(total);
+                }
+                });
+                
+                //Division
+                $('#divide').on('click', function(){
+                    
+                    function divide(){
+                    set("dividing");
+                    count++;
+                    if( digs.length>0 ){
+                        join();
+                        if( count === 1 ){
+                            total = joined;
+                            digs = [];
+                        } else {
+                            total /= joined;
+                            digs = [];
+                        }
+                    }
+                }
+                    
+                if(findSet()=== "dividing"){
+                    divide();
+                    display(total);
+                } else if(findSet() === "subtracting"){
+                    join();
+                    total -= joined;
+                    digs = [];
+                    divide();
+                    display(total);
+                } else if( findSet()==="adding" ){
+                    join();
+                    total += joined;
+                    digs = [];
+                    divide();
+                    display(total);
+                } else if( findSet()==="multiplying" ){
+                    join();
+                    total *= joined;
+                    digs = [];
+                    divide();
+                    display(total);
+                } else {
+                    divide();
+                    display(total);
+                }
+                });
+                
+                //On clicking the equals sign
+                $('#eq').on('click', function(){
+                    if( digs.length>0 ){
+                    join();
+                    if( operations.adding ){
+                        total += joined;
+                        display(total);
+                        unSetAll();
+                        digs=[];
+                    }
+                    if( operations.subtracting ){
+                        total -= joined;
+                        display(total);
+                        unSetAll();
+                        digs = [];
+                    }
+                    if( operations.multiplying ){
+                        total *= joined;
+                        display(total);
+                        unSetAll();
+                        digs = [];
+                    }
+                    if( operations.dividing ){
+                        total /= joined;
+                        display(total);
+                        unSetAll();
+                        digs = [];
+                    }
+                    }
+                });
+             });
+        </script>
+    </body>
+</html>
