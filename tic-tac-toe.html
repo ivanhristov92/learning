@@ -1,0 +1,779 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script   src="https://code.jquery.com/jquery-3.1.0.min.js"   integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="   crossorigin="anonymous"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tic-Tac-Toe</title>
+<style>
+body{
+  background: black;
+}
+
+table{
+  background: black;
+  color: white;
+  margin: 5% auto;
+}
+
+.border-left{
+  border-left: 1px solid white;
+}
+
+.border-bottom{
+  border-bottom: 1px solid white;
+}
+
+table{
+  
+}
+
+td{
+  height: 100px;
+  width: 100px;
+  text-align: center;
+}
+
+
+</style>
+</head>
+
+<body>
+
+
+<table>
+  <tr>
+    <td class="border-bottom choice" id="1">1</td>
+    <td class="border-left border-bottom choice" id="2">2</td>
+    <td class="border-left border-bottom choice" id="3">3</td>
+  </tr>
+  <tr>
+    <td class="border-bottom choice" id="4">4</td>
+    <td class="border-left border-bottom choice" id="5">5</td>
+    <td class="border-left border-bottom choice" id="6">6</td>
+  </tr>
+  <tr>
+    <td class="choice" id="7">7</td>
+    <td class="border-left choice" id="8">8</td>
+    <td class="border-left choice" id="9">9</td>
+  </tr>
+</table>
+
+<script>
+	
+	$(document).ready(function(){
+  
+ 
+	var winningCombos = {
+		a: [1,2,3],
+		b: [4,5,6],
+		c: [7,8,9],
+		d: [1,4,7],
+		e: [2,5,8],
+		f: [3,6,9],
+		g: [1,5,9],
+		h: [3,5,7]
+	}
+	
+	var av = {
+		a: [1,2,3],
+		b: [4,5,6],
+		c: [7,8,9],
+		d: [1,4,7],
+		e: [2,5,8],
+		f: [3,6,9],
+		g: [1,5,9],
+		h: [3,5,7]
+	}
+	
+	var keys = Object.keys(av);
+	var moves = 0;
+	
+	///////////////////////////////// The Player Class////////////////////////////
+	
+	function Player(name, symbol, type, firstOrNo){
+		this.first = firstOrNo;
+		this.winner = false;
+		this.name = name;
+		this.symbol = symbol;
+		this.type = type;
+		this.choice;
+		this.selected = [];
+		this.adj = []; //adjecent winning combos
+		//if 1 is selected, 1,2,3; 1,5,9; and 1,4,7 are adj
+		this.comp = [];//complementary winning combos:
+		//a combo which contains a single char from an adj combo
+		this.intComp = []; //intersection point of complementary arrs 
+		this.intAdj = []; //intersection point of adjecent arrs
+		this.oneToGo = []; //if a player only needs one more char of a winning combo to win, and 
+		//it is still available, this var stores the needed char
+		this.bBetScore = 0; //each intComp adds 1 point, intAdj's add 2 points,
+		//if a player has two chars from a winning combo and the third one is available,
+		//3 points are added.
+		//1 additional point is added to the first player to play, representing advantage
+		this.oponent = {};
+		
+	} //-- END OF CONSTRUCTOR
+	
+	//PROTOTYPE	
+	Player.prototype = {
+	
+		findAdj: function(){//finds adjecent combos
+			var self = this; //for deeper usage
+			var adj = [];//temporary representation of this.adj
+			this.selected.forEach(function(sel){
+				keys.forEach(function(key){
+					if( winningCombos[key].indexOf(sel) > -1 ){
+						switch( av[key].length ){
+							case 2:
+								adj.push(key);
+								break;
+							case 1:
+								var count = 0;
+								self.selected.forEach(function( s ){
+									if( winningCombos[key].indexOf(s) > -1 ){
+										count++
+									}
+								});
+								if( count === 2 ){
+									adj.push(key);
+								}  //-- end if
+								break;
+						}  //-- end switch
+					} //-- end if
+				}); //-- end forEach
+			}); //-- end forEach
+			
+			//excluding element repetition
+			adj.forEach(function(a){
+				if( adj.indexOf(a) !== adj.lastIndexOf(a) ){
+					var index = adj.lastIndexOf(a);
+					adj.splice(index, 1);
+				}
+			});
+			//transfering the data from temporary to object storage	
+			this.adj = adj.map(function(c){return c;});
+			console.log(this.type + "'s adjecent combos are: ");
+			console.log(this.adj);
+		}, //-- end of findAdj()
+		findComp: function(){
+			var self = this;
+			var comp = []; //temporary storage
+			self.adj.forEach(function(a){
+				//winning combo
+				var win = winningCombos[a];
+				keys.forEach(function(k){	//for each available combo
+					if( av[k].length === 3 ){	// with a length of 3
+						for( var j = 0; j <= av[k].length-1; j++ ){
+							if( win.indexOf(av[k][j]) >-1 ){
+								//console.log(k + " is complementary");
+								if( comp.indexOf(k) === -1 ){
+									comp.push(k);
+								} 		//-- end if
+							} 		//-- end if
+						}		 //-- end for	
+					} 		//-- end if
+				}); 	//-- end forEach
+				
+			}); //-- end forEach
+			this.comp = comp.map(function(c){
+				return c;
+			});
+			console.log(this.type + "'s complementary are: ");
+			console.log(this.comp);	
+			
+		
+		},//-- end of findComp()
+		findIntComp: function(){
+			var self = this;
+			var temp = this.comp.map(function(m){
+				return winningCombos[m];
+			});
+			if(temp.length > 0){
+				temp = temp.reduce(function(a,b){
+					return a.concat(b);
+				});
+			}
+			temp.sort();
+			temp = temp.join("");
+			//p is another temporary var
+			var p = temp.match(/(.)\1{1,}/g);
+			var points = [];
+			if(p){
+				p.forEach(function(m){
+					points.push(m.slice(0,1))
+				});
+			}
+			
+			var final = [];
+			console.log("BEGINNING of X Points Calculation");
+			points.forEach(function(m){
+				var count = 0;
+				self.adj.forEach(function(a){
+					if( winningCombos[a].indexOf(parseInt(m)) === -1 ){
+							count++
+						};
+						
+						/*
+						console.log("el: " + m);
+						console.log( winningCombos[a] );
+						console.log( winningCombos[a].indexOf(parseInt(m)) );
+						console.log("count " + count);
+						
+						*/
+				});
+				if( count === self.adj.length){
+					final.push(parseInt(m));
+					console.log( "X point: " + m );
+				}
+			});
+			console.log("END of X Points Calculation");
+			
+			self.intComp = final.map(function(m){return m;});
+			console.log(self.type +  "'s intComp: " + self.intComp);
+		
+		},// --end of findIntComp()
+		findIntAdj: function(){
+			var self = this;
+			var temp = [];
+			if(self.adj){
+				self.adj.forEach(function(a){
+				temp.push(winningCombos[a]);
+			});
+			}
+			if( temp.length > 0 ){
+				temp = temp.reduce(function(a,b){
+					return a.concat(b);
+				}).sort();
+			}
+			temp = temp.join("");
+			var p = temp.match(/(.)\1{1,}/g);
+			var points = [];
+			if(p){
+				p.forEach(function(m){
+					points.push(parseInt(m.slice(0,1)));
+				});
+			}
+			
+			var final = [];
+			points.forEach(function(m){
+				if(self.selected.indexOf(m) === -1 ){
+					final.push(m);
+				}
+			});
+			self.intAdj = final.map(function(r){
+				return r;	
+			});
+			console.log(self.type + "'s intAdj: " + self.intAdj);
+			
+		},//-- end of findIntAdj()
+		findOneToGo: function(){ //if player has 2 out of three and the 3rd is available
+			
+			var self = this;
+			var temp = []; //for arrs
+			
+			self.adj.forEach(function(a){
+				if( av[a].length === 1 ){
+					var count = 0;
+					self.selected.forEach(function(s){
+						if( winningCombos[a].indexOf(s) > -1 ){
+							count++
+						}
+					});//-- end of forEach
+					if( count === 2 ){
+						temp.push( parseInt(av[a][0]) );
+					}
+				}//-- end if
+			});//-- ejd of forEach
+				t = temp.map(function(m){
+					return parseInt(m.toString().slice(0,1));
+				});
+				self.oneToGo = t.map(function(m){
+					return m;
+				});
+				
+				console.log(self.type + "'s oneToGo: " + self.oneToGo);
+			
+		}, //-- end of findOneToGo()
+		
+		findBBetScore: function(){
+			var self = this;
+			var compScore = 0; //intComp temp score
+			var adjScore = 0; //intAdj temp score
+			var oneToGoScore = 0; //one2go
+			var totalScore = 0;
+			
+			if( self.intComp.length > 0 ){
+				compScore = self.intComp.length;
+			}
+			
+			if( self.intAdj.length > 0 ){
+				adjScore = self.intAdj.length * 2;
+			}
+			
+			if( self.oneToGo.length > 0 ){
+				oneToGoScore = self.oneToGo.length * 3;
+			}
+			
+			if( oneToGoScore > 0 ){ //if we have any oneToGo combo, compScore is disregarded, so...
+				totalScore = adjScore + oneToGoScore;
+			} else { // if there is still no oneToGo combo available to us
+				totalScore = compScore + adjScore;
+			}
+			
+			if( self.first === true ){
+				totalScore += 1;
+			}
+			
+			
+			self.bBetScore = totalScore;
+			console.log(self.type + "'s current bBetScore: ");
+			console.log(self.bBetScore);
+			
+		},//-- end of findBBetScore()
+		
+		isWinner: function(){ //checks if a player has a winning combination of selected numbers
+			var self = this;
+			if( self.selected.length >= 3 ){
+				console.log("isWinnerrrr");
+				keys.forEach(function(k){
+					var count = 0;
+					self.selected.forEach(function(s){
+						if( winningCombos[k].indexOf(s) > -1 ){
+							count++;
+						}
+					});			
+					if( count === 3 ){
+						console.log( self.name + " WINS THIS GAME");
+						self.winner = true;
+					}
+				});
+			}
+		},//-- end of isWinner()
+		
+		
+		findOponent: function(){
+			var self = this;
+			//determine who the oponent is
+			var obj;
+			if( self.type === "Machine" ){
+				obj = me;	
+			} else {
+				obj = computer;
+			}
+			self.oponent.type = obj.type;
+			self.oponent.intComp = obj.intComp;
+			self.oponent.intAdj = obj.intAdj;
+			self.oponent.oneToGo = obj.oneToGo;
+			self.oponent.bBetScore = obj.bBetScore;
+			
+		},//-- end of findOponent
+		
+		def: function(){
+			var self = this;
+			return {
+				regular: function(){
+					console.log(self);
+					console.log("regular prevention check for onToGo");
+					if( self.oponent.oneToGo.length > 0 ){
+						console.log( self.oponent.oneToGo );
+					}
+				},
+				defend: function(){
+					console.log("defend");
+					console.log(self);
+					console.log("DEFENSE MODE ON!");
+					console.log("inner regular prevention");
+				}
+			};
+			
+		}//-- end of def();
+	} //-- END OF PROTOTYPE
+	
+	//initializing players
+	var computer = new Player("Computer", "O", "Machine", false);
+	var me = new Player("Ivan", "X", "Human", true);
+	
+	
+	////////////////////////// Call Simulation class here//////////////////////
+	
+		/*
+		what do i want this class to do?
+		it has to generate a new instance for every single simulation the 
+		computer does. there are a few possible simulation every turn.
+		the computer will only do them when it is its turn.
+		the simulations have to be generated on click
+		it will take the current parameters of the cpu player, the X points in particular
+		a new simulation instance will be created for each X point: Comp and Adj
+		the new simulation has to have copied the parameters from before its cretion
+		and to be able to manipulate the copied information without affecting the original.
+		it has to calculate everything till it gets to its new chance score.
+		all the scores from the simulations are kept and compared to one another to
+		project the largest number.
+		if the largest score is as big or bigger than that of the human player's current
+		situation, the computer makes the best move. the best move is the one with the 
+		highest score afterwards. 
+		if the computer cannot make a higher or at least equal score with one move,
+		defensive mode is called.
+		
+		
+		*/
+		
+		var newAv = Object.create(av);
+		function Simulation(pl){
+			//random naming for var
+			var k = Object.create(pl);
+			
+			k.prototype = Object.create(Object.getPrototypeOf(pl));
+			k.selected = pl.selected.map(function(r){return r;});
+			k.adj = pl.adj.map(function(r){return r;});
+			
+			k.update = function(){
+					if( this.type === "Machine" ){
+						this.selected = computer.selected.map(function(r){return r;});
+						this.adj = computer.adj.map(function(r){return r;});
+					} else {
+						this.selected = me.selected.map(function(r){return r;});
+						this.adj = me.adj.map(function(r){return r;});
+					}
+				}
+			k.takenOut;
+			
+			k.simulate = function( val ){
+				k.selected.push(val);
+				keys.forEach(function(k){ //remove from newAv
+					newAv[k] = av[k].map(function(r){return r;});
+					if( newAv[k].indexOf( val ) >-1 ){
+						k.takenOut = val;
+						newAv[k].splice(newAv[k].indexOf(val), 1);
+					}
+				});
+			}
+			k.stopSimulate = function(){
+				keys.forEach(function(k){
+					newAv[k] = av[k].map(function(r){return r;});
+				});
+				k.selected.pop();
+			}
+			k.findAdj = function(){
+				var self = this; //for deeper usage
+				var adj = [];//temporary representation of this.adj
+				self.selected.forEach(function(sel){
+					keys.forEach(function(key){
+						if( winningCombos[key].indexOf(sel) > -1 ){
+							switch( newAv[key].length ){
+								case 2:
+									adj.push(key);
+									break;
+								case 1:
+									var count = 0;
+									self.selected.forEach(function( s ){
+										if( winningCombos[key].indexOf(s) > -1 ){
+											count++
+										}
+									});
+									if( count === 2 ){
+										adj.push(key);
+									}  //-- end if
+									break;
+							}  //-- end switch
+						} //-- end if
+					}); //-- end forEach
+				}); //-- end forEach
+				
+				//formating element repetition
+				adj.forEach(function(a){
+					if( adj.indexOf(a) !== adj.lastIndexOf(a) ){
+						var index = adj.lastIndexOf(a);
+						adj.splice(index, 1);
+					}
+				});
+				//transfering the data from temporary to object storage	
+				self.adj = adj.map(function(c){return c;});
+				console.log(self.name + "'s simulated adjecent combos are: ");
+				console.log(self.adj);
+				console.log("k.selected " + self.selected);
+			}
+			
+			k.findComp = function(){
+				var self = this;
+				var comp = []; //temporary storage
+				self.adj.forEach(function(a){
+					//winning combo
+					var win = winningCombos[a];
+					keys.forEach(function(k){	//for each available combo
+						if( newAv[k].length === 3 ){	// with a length of 3
+							for( var j = 0; j <= newAv[k].length-1; j++ ){
+								if( win.indexOf(newAv[k][j]) >-1 ){
+									//console.log(k + " is complementary");
+									if( comp.indexOf(k) === -1 ){
+										comp.push(k);
+									} 		//-- end if
+								} 		//-- end if
+							}		 //-- end for	
+						} 		//-- end if
+					}); 	//-- end forEach
+					
+				}); //-- end forEach
+				this.comp = comp.map(function(c){
+					return c;
+				});
+				console.log(this.type + "'s simulated complementary are: ");
+				console.log(this.comp);	
+				
+			}
+			
+			k.findOneToGo = function(){
+				var self = this;
+				var temp = []; //for arrs
+				
+				self.adj.forEach(function(a){
+					if( newAv[a].length === 1 ){
+						var count = 0;
+						self.selected.forEach(function(s){
+							if( winningCombos[a].indexOf(s) > -1 ){
+								count++
+							}
+						});//-- end of forEach
+						if( count === 2 ){
+							temp.push( parseInt(newAv[a][0]) );
+						}
+					}//-- end if
+				});//-- ejd of forEach
+					t = temp.map(function(m){
+						return parseInt(m.toString().slice(0,1));
+					});
+					self.oneToGo = t.map(function(m){
+						return m;
+					});
+					
+					console.log(self.type + "'s oneToGo: " + self.oneToGo);
+			}//--end of findOneToGo()
+						
+			return k;	
+		}
+		
+		
+		var cpu = new Simulation(computer);
+		var user = new Simulation(me);
+		
+		
+////////////////////////////////////////////////////////////////////////////////
+		
+	
+	var turn = me.type;
+	
+	var choices = document.getElementsByClassName('choice');
+	choices = Array.from(choices);	
+	
+	
+	//On click Push choice to selected and remove from available, and make the cell a symbol
+	choices.forEach(function(num){
+    num.innerHTML ="";
+		num.classList.add("available"); //this will be removed on each click
+		num.addEventListener('click', function(){
+			var player; 
+			var opPlayer;//oponent player
+			var toSelect = this;
+			
+			
+			if( turn === me.type ){//Human's turn
+				player = me;
+				opPlayer = computer;
+			} else {
+				player = computer;
+				opPlayer = me;
+			}
+			
+			function changeTurns(){
+				if( turn === me.type ){
+					turn = computer.type;
+				} else {
+					turn = me.type;
+				}
+			}
+			
+					
+			if( this.classList.contains("available") ){				
+				
+				player.choice = parseInt(toSelect.id);
+				console.log("PLAYER CHOICE");
+				console.log(player.choice);
+				
+					
+				
+				function choose(num, who){
+					var el = document.getElementById(num);
+					if( el.classList.contains("available") ){
+						console.log("num contains class available !!!!!!!!");
+						el.classList.remove("available");// to prevent from repeated selection
+					//Push to selected and add symbol
+					el.innerHTML = who.symbol;
+					who.selected.push(num);
+					
+					
+				//Remove from available 
+						for( var i=0; i<=keys.length-1; i++ ){
+							var index = av[keys[i]].indexOf(num);
+							if( index > -1 ){
+								av[keys[i]].splice(index, 1);
+								if( clone && clone.indexOf(num) >-1 ){
+									clone.splice(clone.indexOf(num), 1);
+								}
+							}//-- end if
+						}//-- end for
+					}
+					me.isWinner();
+					computer.isWinner();
+					if( me.winner || computer.winner ){
+						alert("THE END");
+					}
+					
+								
+					moves++;
+					changeTurns();
+				}//-- end of choose()
+				
+				choose(player.choice, player);
+				
+				
+				player.findAdj();
+				opPlayer.findAdj();
+							
+				player.findComp();
+				opPlayer.findComp();
+							
+				player.findIntComp();
+				opPlayer.findIntComp();
+							
+				player.findIntAdj();
+				opPlayer.findIntAdj();
+							
+				player.findOneToGo();
+				opPlayer.findOneToGo();
+							
+				player.findBBetScore();
+				opPlayer.findBBetScore();
+							
+				player.isWinner();
+				opPlayer.isWinner();
+							
+				player.findOponent();
+				opPlayer.findOponent();
+						
+				console.log(player.type + "'s oponent is:");	
+				console.log(player.oponent);
+				console.log(opPlayer.type + "'s oponent is:");	
+				console.log(opPlayer.oponent);
+				console.log("MOVES MADE " + moves);
+				
+				
+				/////////Simulation/////////////
+				
+				var clone = [];
+				keys.forEach(function(k){
+					av[k].forEach(function(m){ 
+						if( clone.indexOf(m) === -1 ){
+							clone.push(m);
+						}
+					});
+				});
+				
+				function prevent(fromWhom){
+					if( fromWhom.oneToGo.length>0 ){
+						var rand = Math.floor(Math.random() * fromWhom.oneToGo.length);
+						choose(fromWhom.oneToGo[rand], computer);
+					}
+				}
+				
+				
+				
+				if( moves === 1 ){
+					console.log("Second move is coming");
+					
+					var corners = [1,3,7,9];
+					if( corners.indexOf(me.choice)>-1 ){
+						choose(5, computer);
+					} else if( me.choice === 5 ){
+						var rand = Math.floor(Math.random()*4);
+						choose(corners[rand], computer);
+					}else {
+						choose(5, computer);
+					}
+					
+					/*
+					if( me.intComp.length > 0 ){
+						var rand = Math.floor((Math.random() * me.intComp.length));
+						choose(me.intComp[rand], computer);
+					} else {
+						var rand = Math.floor(Math.random() * clone.length);
+						choose( clone[rand], computer );
+					}
+					*/
+ 				}//-- end if moves === 1
+				else if( moves === 3 ){
+					
+						console.log("Fourth move is coming");
+						//time for a simulation
+						cpu.update(); //set up simulator
+						var largest = 0;
+						var good = 0;
+							
+							computer.intComp.forEach(function(int){
+							
+								cpu.simulate(int);//begin simulation
+								cpu.findAdj();
+								cpu.findComp();
+								cpu.findIntComp();
+								cpu.findIntAdj();
+								cpu.findOneToGo();	
+								cpu.findBBetScore();
+								if( cpu.bBetScore > largest ){
+									largest = cpu.bBetScore;
+									good = int;
+								}
+								console.log("SIMULATED");
+								cpu.largest = largest;
+								cpu.good = good;
+								console.log(cpu);
+								cpu.stopSimulate();
+							
+							});
+						
+						if( me.oneToGo.length > 0 ){
+							choose( me.oneToGo[0], computer );
+						}
+						
+						else if(cpu.bBetScore < me.bBetScore){ //if the simulated result is still not satisfactory
+								
+								var ch= [];
+								computer.adj.forEach(function(a){
+									
+									av[a].forEach(function(m){
+										if( me.intAdj.indexOf(m) === -1 ){
+											
+											ch.push(m);
+										}
+									});								
+								});
+								choose(ch[1], computer);
+							
+						
+						} 
+					}//-- end of else if moves === 3
+					else if( moves >= 5) {
+						if( me.oneToGo.length>0 ){
+							prevent(me);
+						} else {
+							var rand = Math.floor(Math.random() * clone.length);
+							choose(clone[rand], computer);
+						}
+					}
+				
+			} //-- end if;
+		});  //-- end of eventListener
+	}); //-- end forEach
+}); // end of jquery
+
+</script>
+</body>
+</html>
