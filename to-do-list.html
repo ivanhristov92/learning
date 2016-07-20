@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>A Simple To Do List</title>
+	<style>
+
+	*{
+		padding: 0;
+		margin: 0;
+	}
+
+	.container{
+		background: ;
+		padding: 0 1em 1em 1em;
+		border: 1px solid black;
+		margin: 2em auto;
+		width: 96%;
+		box-shadow: 5px 5px 5px gray;
+	}
+
+
+	.del, .delSection{
+		width: 2%;
+		margin: 0;
+		margin-left: 98%;
+		background: ;
+		text-align: right;
+	}
+
+	.delSection{
+		margin-bottom: 1em;
+	}
+
+
+	main{
+		background: ;
+	}
+
+	section{
+		padding: 1em;
+		padding-top: 0;
+		border: 1px solid lightgrey;
+		background: ;
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+		box-shadow: 1px 1px 1px black;
+	}
+
+
+	section:first-of-type{
+		margin-top: 1em;
+	}
+
+	.listDetails{
+		border: 1px solid lightgrey;
+		margin-bottom: 0.5em;
+		padding: 0.4em 0.5em 0 0.5em;
+	}
+
+	.listType{
+		margin: 0;
+		padding: 0;
+		background: ;
+		text-align: right;
+	}
+
+	.itemRow{
+		display: block;
+		background: ;
+	}
+
+	.itemRowInput{
+		margin: 0;
+		width: 2%;
+	}
+	label{
+		display: inline-block;
+		position: relative;
+		top: -3px;
+		margin: 0;
+		margin-left: 1%;
+		width:97%;
+		border-bottom: 1px solid black;
+		background: ;
+		margin-top: 0.2em;
+	}
+
+	label span{
+		float: right;
+		background: ;
+		width: 1%;
+
+	}
+	.itemRow:last-of-type label{
+		border: none;
+	}
+
+	.addItemRow{
+		
+		text-align: right;
+		padding-right:;
+
+	}
+	.addItemRow button{
+		position: relative;
+
+	}
+
+	.addSection {
+	}
+	</style>
+</head>
+<body>
+
+<input id="initialInput" type="text" placeholder="Create a new To DO list">
+<button id="initialButton">Create</button>
+<script type="text/javascript">
+
+
+
+var model = {
+	containers: {
+		//container[i]: { --- meaning view.elements.containers[i], push-nato vyv model-a
+		//	sections: []
+		//}
+	}
+};//end of model
+
+
+
+var view = {
+	elements:{
+			initialInput: document.getElementById("initialInput"),
+			initialButton: document.getElementById("initialButton")
+
+	},
+	classes: (function(){
+
+			function Container(name){
+				this.name = name;
+				return this;
+			}
+
+			Container.prototype.toDOM = function(){
+				var container = document.createElement("DIV");
+				container.classList.add("container");
+
+				var del = document.createElement("P");
+				del.classList.add("del");
+				var delText = document.createTextNode("x");
+				del.appendChild(delText);
+
+				var mainEl = document.createElement("MAIN");
+				mainEl.classList.add("main");		
+
+				var containerTitle = document.createElement("H2");
+				containerTitle.classList.add("containerTitle");
+				var containerTitleText = document.createTextNode(this.name);
+				containerTitle.appendChild(containerTitleText);
+
+
+				var sectionHook = document.createElement("DIV");
+				sectionHook.classList.add("sectionHook");
+
+				var addSection = document.createElement("DIV");
+				addSection.classList.add("addSection");
+
+				var addSectionInput = document.createElement("INPUT");
+				addSectionInput.setAttribute("type", "text");
+				addSectionInput.setAttribute("placeholder", "Section Name");
+				addSectionInput.classList.add("addSectionInput");
+
+				var addSectionButton = document.createElement("BUTTON");
+				addSectionButton.classList.add("addSectionButton");
+				var addSectionButtonText = document.createTextNode("Add Section");
+				addSectionButton.appendChild(addSectionButtonText);
+				addSection.appendChild(addSectionInput);
+				addSection.appendChild(addSectionButton);
+
+				mainEl.appendChild(containerTitle);
+				mainEl.appendChild(sectionHook);
+				mainEl.appendChild(addSection);
+				container.appendChild(del);
+				container.appendChild(mainEl);
+				document.body.appendChild(container);
+				this.parent = document.body;
+				this.element = container;
+				this.sectionHook = sectionHook;
+				this.addSection = addSection;
+			}
+
+			Container.prototype.destroy = function(){
+				this.parent.removeChild(this.element);
+			}
+
+			function Section (sectionTitle){
+				this.sectionTitle = sectionTitle;
+				return this;
+			}
+
+			Section.prototype.toDOM = function(whereToAppend){
+				//create the section element
+				var section = document.createElement("SECTION");
+				section.classList.add("section");
+
+				var del = document.createElement("P");
+				var delText = document.createTextNode("x");
+				del.appendChild(delText);
+				del.classList.add("delSection");
+
+				//-------------------------------
+				//create the .listDetails element
+				var listDetails = document.createElement("DIV");
+				listDetails.classList.add("listDetails");
+
+				var listType = document.createElement("H3");
+				listType.classList.add("listType");
+				var listTypeText = document.createTextNode(this.sectionTitle);
+				listType.appendChild(listTypeText);
+
+				listDetails.appendChild(listType);
+
+				//------------------------------
+				//create the .addItemRow element
+				var addItemRow = document.createElement("DIV");
+				addItemRow.classList.add("addItemRow");
+
+				var input = document.createElement("INPUT");
+				input.classList.add("addItemInput");
+				input.setAttribute("type", "text");
+				input.setAttribute("placeholder", "item");
+
+				var button = document.createElement("BUTTON");
+				button.classList.add("addItemButton");
+				var buttonText = document.createTextNode("+");
+				button.appendChild(buttonText);
+
+				addItemRow.appendChild(input);
+				addItemRow.appendChild(button);
+
+				//------------
+				//combine them
+				section.appendChild(del);
+				section.appendChild(listDetails);
+				section.appendChild(addItemRow);
+				whereToAppend.appendChild(section);
+				this.parent = whereToAppend;
+				this.element = section;
+				this.del = del;
+				this.addItemInput = input;
+				this.addItemButton = button;
+				this.listDetails = listDetails;
+			}
+
+			Section.prototype.destroy = function(){
+				if(this.parent){
+					this.parent.removeChild(this.element);
+				}
+			}
+
+			function Item (name){
+				this.name = name;
+				return this; 
+			}
+
+			Item.prototype.toDOM = function(whereToAppend){
+				var itemRow = document.createElement("DIV");
+				itemRow.classList.add("itemRow");
+
+				var itemRowInput = document.createElement("INPUT");
+				itemRowInput.setAttribute("type", "checkbox");
+				itemRowInput.classList.add("itemRowInput");
+
+				var label = document.createElement("LABEL");
+				label.classList.add("label");
+				var labelText = document.createTextNode(this.name);
+				var labelSpan = document.createElement("SPAN");
+				labelSpan.classList.add("deleteItem");
+				var labelSpanText = document.createTextNode("x");
+				labelSpan.appendChild(labelSpanText);
+				label.appendChild(labelText);
+				label.appendChild(labelSpan);
+
+				itemRow.appendChild(itemRowInput);
+				itemRow.appendChild(label);
+
+				whereToAppend.appendChild(itemRow);
+				this.parent = whereToAppend;
+				this.element = itemRow;
+				this.del = labelSpan;
+				this.itemRowInput = itemRowInput;
+			}
+
+			Item.prototype.destroy = function(){
+				if(this.parent){
+					this.parent.removeChild(this.element);
+				}
+			}
+
+			return{
+				Container: Container,
+				Section: Section,
+				Item: Item
+			};
+			
+		})()//end of classes
+};//end of view
+
+var controller = {
+	initContainer: function(name){
+		var n = new view.classes.Container(name);
+		return n;
+	},
+	initSection: function(name){
+		var n = new view.classes.Section(name);
+		return n;
+	},
+	initItem: function(name){
+		var n = new view.classes.Item(name);
+		return n;
+	},
+	eventListeners:(function(){
+		var els = view.elements;
+		var i = 0;
+		var j = 0;
+		var k = 0;
+		els.initialButton.addEventListener('click', function(){
+			
+			model.containers[i] = controller.initContainer(els.initialInput.value || ("container " + i));
+			model.containers[i].key = i;
+			model.containers[i].toDOM();
+			console.log(model.containers[i].key);
+			console.log(model.containers[i]["element"]);
+			els.initialInput.value = "";
+
+			model.containers[i]["sections"] = {};
+
+			var children = model.containers[i]["element"].childNodes;
+			var del;
+			for( var c in children ){
+				if( children[c].className === "del" ){
+					del = children[c];
+				}
+			}
+			var curr = i;
+			console.log(del);
+			del.addEventListener('click', function(){
+				console.log(curr);
+				model.containers[curr].destroy();
+				delete model.containers[curr];
+				console.log(model.containers);
+			});
+
+			i++;
+			
+
+
+			var keys = Object.keys(model.containers);
+			var lastKey = keys[keys.length-1];
+			var lastContainer = model.containers[lastKey];
+			var addSection = lastContainer.addSection;
+			var ASChildren = addSection.childNodes;
+			var addSectionButton;
+			var addSectionInput;
+			var sectionHook = model.containers[lastKey].sectionHook;
+			for( var c in ASChildren ){
+				if( ASChildren[c].className === "addSectionButton" ){
+					addSectionButton = ASChildren[c];
+				} else if( ASChildren[c].className === "addSectionInput" ){
+					addSectionInput = ASChildren[c];
+				}
+			}
+
+			
+
+			addSectionButton.addEventListener('click', function(){
+				var value = addSectionInput.value;
+				model.containers[lastKey]["sections"][j] = controller.initSection(value || ("section " + j));
+				console.log(model.containers[lastKey]["sections"]);
+				var target = model.containers[lastKey]["sections"][j];
+				target.key = j;
+				target.toDOM(sectionHook);
+				addSectionInput.value = "";
+
+				j++;
+
+				target.del.addEventListener('click', function(){
+					target.destroy();
+					delete model.containers[lastKey].sections[target.key];
+					console.log(model.containers[lastKey].sections);
+
+				});
+
+				var ks = Object.keys(model.containers[lastKey].sections);
+				var lastSectionKey = ks[ks.length-1];
+
+				var targetedSection = model.containers[lastKey].sections[lastSectionKey];
+				targetedSection.addItemButton.addEventListener('click', function(){
+					targetedSection.items = targetedSection.items || {};
+					var val = targetedSection.addItemInput.value;
+					targetedSection.items[k] = controller.initItem(val || "item " + k);
+					targetedSection.items[k].key = k;
+					var listDetails = targetedSection.listDetails
+					targetedSection.items[k].toDOM(listDetails);
+					targetedSection.addItemInput.value = "";
+					var tg = targetedSection.items[k];
+
+					tg.itemRowInput.addEventListener('click', function(){
+						if(!tg.element.style.background){
+							tg.element.style.background = "lightgreen";
+						} else{
+							tg.element.style.background = "";
+						}
+						
+					});
+
+					tg.del.addEventListener('click', function(){
+						tg.destroy();
+						delete targetedSection.items[tg.key];
+					});
+
+					k++;
+
+				});
+
+			});
+
+		});
+	})()
+};
+
+
+
+controller.eventListeners;
+
+
+
+
+</script>
+</body>
+</html>
