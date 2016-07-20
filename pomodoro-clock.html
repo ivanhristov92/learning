@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+         <style>
+            body{
+            background: black;
+            }
+
+            .settings{
+                display: inline-block;
+                background: ;
+                color: white;
+                margin-left: 25%;
+            }
+
+            .detCont{
+                background: ;
+                width: 100px;
+                margin: 0 auto;
+            }
+            .details{
+                display: inline-block;
+                width: 25%;
+                margin-left: 4%;
+                background: ;
+                color: white;
+                text-align: center;
+                font-size: 150%;
+                overflow: hidden;
+            }
+
+
+            .details a:hover {
+            text-decoration: none;
+            }
+
+            a:link {
+                text-decoration: none;
+                color: white;
+            }
+
+            a:visited {
+                text-decoration: none;
+                color: white;
+            }
+
+            a:hover {
+                text-decoration: none;
+                color: white;
+            }
+
+            a:active {
+                text-decoration: none;
+                color: white;
+            }
+
+            .circleLink{
+                text-decoration: none;
+                color: white;
+                position: absolute;
+                top: 40%;
+                left: 37%;
+                margin-bottom: 3%;
+            }
+
+            .circleLink:hover{
+                text-decoration: none;
+                color: white;
+            }
+
+            .circle{
+                width: 300px;
+                height: 300px;
+                background: green;
+                border-radius: 50%;
+                margin: 0 auto;
+                border: 2px solid green;
+                overflow: hidden;
+            }
+
+            .innerCircle{
+                background: black;
+                height: 100%;
+                width: 100%;
+            }
+
+            .title, .time{
+                position: absolute;
+                width:60%;
+                height:20%;
+                background: ;
+                top: 15%;
+                left: 20%;
+                font-size: 200%;
+                text-align: center;
+                color: white;
+            }
+
+            .time{
+                width: 60%;
+                height: 30%;
+                background: ;
+                font-size: 350%;
+                top: 60%;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div id="brLength"class="settings">
+            <h3>Break Length</h3>
+            <div id="detContBr" class="detCont">
+                <p id="brMinus" class="details"><a href="#">-</a></p>
+                <p id="brNum" class="details">Num</p>
+                <p id="brPlus" class="details"><a href="#">+</a></p>
+            </div>
+        </div>
+
+        <div id="sesLength" class="settings">
+            <h3>Session Length</h3>
+            <div id="detContSes" class="detCont">
+                <p id="sesMinus" class="details"><a href="#">-</a></p>
+                <p id="sesNum" class="details">Num</p>
+                <p id="sesPlus" class="details"><a href="#">+</a></p>
+            </div>
+        </div>
+
+        <a href="#" class="circleLink">
+            <div class="circle">
+                <div class="innerCircle"></div>
+                <div class="title">
+                    Session
+                </div>
+                <div class="time">
+                00:00
+                </div>
+            </div>
+        </a>
+
+        <script>
+            $(document).on('ready', function(){
+
+                var session = 5;
+                var breakLength = 5;
+                var time = session*60;
+                var timeType ="ses";
+                var breakTime = breakLength*60;
+                var styledT;
+                
+                
+                $('a').on('click', function(event){
+                 event.preventDefault();
+                });
+
+                    /*initializing values*/ 
+                $('#brNum').html(breakLength);
+                $('#sesNum').html(session);
+
+                //Minus and Plus navigation for session length
+                $('#sesMinus').on('click', function(){
+                    if( session > 0 ){
+                    session--;
+                    }
+                    if( timeType === "ses" ){
+                    time = session*60;
+                    } $('#sesNum').html(session);
+                });
+                $('#sesPlus').on('click', function(){
+                    session++;
+                    if( timeType === "ses" ){
+                    time = session*60;
+                    }
+                $('#sesNum').html(session);
+                }); 
+                
+                //----------------
+                
+                //Minus and Plus navigation for break length
+                $('#brMinus').on('click', function(){
+                    if( breakLength > 0 ){
+                    breakLength--;
+                    }
+                    if( timeType === "br" ){
+                    time = breakLength*60;
+                    }    
+                    $('#brNum').html(breakLength);
+                });
+                $('#brPlus').on('click', function(){
+                    breakLength++;
+                    if( timeType === "br" ){
+                    time = breakLength*60;
+                    } $('#brNum').html(breakLength);
+                }); 
+                
+                //----------------
+                
+                //Clock
+                //incrementing the time every second
+                var running = false;
+                var t;
+                function timer(){
+                //account for the 00:00 switch
+                if(time === 0 && timeType === "ses"){
+                    time = breakLength*60;
+                    timeType = "br"
+                    $('.title').html("Break");
+                    console.log("aaa");
+                } else if( time === 0 && timeType === "br" ){
+                    time = session*60;
+                    timeType = "ses";
+                    $('.title').html("Session");
+                    console.log("bbb");
+                }
+                //normal clock functionality
+                time--;
+                var mins = Math.floor(time/60);
+                var seconds = time-(Math.floor(time/60))*60
+                if( seconds <10 ){
+                    styledT = mins + ":0" +  seconds;
+                } else {
+                    styledT = mins + ":" +  seconds;
+                }
+                $('.time').html(styledT);
+                running = true;
+                t = setTimeout(function(){timer()}, 1000);
+                //Visual representation
+                if( timeType === "ses" ){
+                    var perc = (time/(session*60))*100 + "%"; console.log(perc);
+                    $('.innerCircle').css('height', perc);
+                    $('.circle').css('background', 'green').css('border', '2px solid green');
+                } else if( timeType === "br" ){
+                    var perc = (time/(breakLength*60))*100 + "%";
+                    console.log(perc);
+                    $('.innerCircle').css('height', perc);
+                    $('.circle').css('background', 'orange').css('border', '2px solid orange');
+                }
+                }
+                $('.circleLink').on('click', function(){ 
+                if( !running ){
+                    timer();
+                } else {
+                    clearTimeout(t);
+                    running = false;
+                }
+                });
+            
+            });//------end of jquery
+
+        </script>
+    </body>
+</html>
