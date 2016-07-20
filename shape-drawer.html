@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>softUni HW</title>
+	<style type="text/css">
+
+	*{
+		margin-bottom: 10px;
+	}
+
+	form{
+		display: inline-block;
+	}
+
+	canvas{
+		background: lightgrey;
+		display: inline-block;
+		float: right;
+		margin-right: 20%;
+	}
+
+	</style>
+</head>
+<body>
+<form>
+	<p>Choose the shape you want to draw</p>
+	<label>Shape: </label>
+	<select id="chooseShape">
+		<option></option>
+		<option>Rectangle</option>
+		<option>Triangle</option>
+		<option>Circle</option>
+		<option>Line</option>
+		<option>Segment</option>
+	</select>
+
+	<br/>
+	<p>Choose the color you want to draw in</p>
+		<label>Color: </label>
+	<input type="color" id = "col">
+	<br/>
+	
+	<p>Choose the coordinates for your preferred shape*</p>
+	<label class="X">X</label>
+	<input class="X" id="X" type="number">
+	<label class="Y">Y</label>
+	<input id="Y" type="number">
+<br/>
+	<label class="X2">X2</label>
+	<input id="X2" type="number">
+	<label class="Y2">Y2</label>
+	<input id="Y2" type="number">
+	<br/>
+	<label class="X3">X3</label>
+	<input id="X3" type="number">
+	<label class="Y3">Y3</label>
+	<input id="Y3" type="number">
+	<button id="add">Add</button>
+	<p>*Take a look at the legend</p>
+
+	<div style="width: 350px; height: 300px; overflow: auto;">
+<p>If you want to DELETE your last shape, press "-".</p>
+<h3>RECTANGLE</h3>
+<p>- When you select RECTANGLE, X and Y determine the position of its top left corner. X2 and Y2 are width and height respectively.</p>
+<h3>TRIANGLE</h3>
+<p>- When you select TRIANGLE, X and Y make one of the triangles corners, X2 and Y2 make the second corner, and X3 and Y3 - the third corner.</p>
+<h3>CIRCLE</h3>
+<p>- When you select CIRCLE, X and Y determine where the center of the circle will be on the canvas, while X2 is the circle Radius.></p>
+<h3>LINE or SEGMENT</h3>
+<p>- When you select LINE or SEGMENT, X and Y make the starting point of the line or segment, while X2 and Y2 make its end point.</p>
+	</div>
+
+</form>
+
+<canvas id="myCanvas" width="300px" height="300px"></canvas>
+
+<script type="text/javascript">
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+
+var shapes = {
+	_toString: function(argum){
+		var str = "";
+				this.arr.forEach(function(a){
+					str += a + " ";
+				});
+				this.str = str;
+				console.log(str);
+	},
+	shape: {//Base class-simulation
+		init: function( x, y, color ){
+			this.arr = Array.from(arguments);
+			this.point = {x: x, y: y};
+			this.color = color;
+			this.toString = function(){
+				shapes._toString.call(this);
+			}
+			return this;
+
+		}
+	},
+	circle: {
+		_type: "circle",
+		init: function(x,y,r,color){
+			shapes.shape.init.call(this, x, y, color);
+			this.arr = Array.from(arguments);
+			this.O = this.point;
+			this.r = r;
+			return this;
+		},
+		draw: function(){
+			 ctx.beginPath();
+   			 ctx.arc(this.O.x,this.O.y,this.r,0,Math.PI*2,true); 
+   			 ctx.fillStyle = this.color;
+   			 ctx.fill();
+   			 ctx.closePath();
+		}
+	},
+	rectangle: {
+		_type: "rectangle",
+		init: function(x,y, width, height, color){
+			shapes.shape.init.call(this, x, y, color);
+			this.arr = Array.from(arguments);
+			this.A = this.point;
+			this.width = width;
+			this.height = height;
+			return this;
+		}, 
+		draw: function(){
+			ctx.fillStyle = this.color;
+			ctx.fillRect(this.A.x, this.A.y, this.width,this.height);
+		}
+	},
+	triangle: {
+		_type: "triangle",
+		init: function(x, y, x2, y2, x3, y3, color){
+			shapes.shape.init.call(this, x, y, color);
+			this.arr = Array.from(arguments);
+			this.A = this.point;	
+			this.B = {x2: x2, y2: y2};
+			this.C = {x3: x3, y3: y3};
+			return this;
+		},
+		draw: function(){
+			ctx.beginPath();
+		    ctx.moveTo(this.A.x,this.A.y);
+		    ctx.lineTo(this.B.x2, this.B.y2);
+		    ctx.lineTo(this.C.x3, this.C.y3);
+		    ctx.fillStyle = this.color;
+		    ctx.fill();
+		}
+	},
+	line: {
+		_type: "line",
+		init: function(x, y, x2, y2, color){
+			shapes.shape.init.call(this, x, y,color);
+			this.arr = Array.from(arguments);
+			this.A = this.point;
+			this.B = {x2: x2, y2: y2};
+			
+			return this;
+		}, draw: function(){
+			ctx.beginPath();
+		    ctx.moveTo(this.A.x,this.A.y);
+		    ctx.lineTo(this.B.x2, this.B.y2);
+		    //ctx.closePath();
+		    ctx.strokeStyle = this.color;
+		    ctx.stroke();
+			    
+		}
+	}, 
+	segment: {
+		_type: "segment",
+		init: function (x, y, x2, y2, color){
+			shapes.shape.init.call(this, x, y, color);
+			this.arr = Array.from(arguments);
+			this.A = this.point;
+			this.B = {x2: x2, y2: y2};
+			
+			return this;
+		},
+		draw: function(){
+			ctx.beginPath();
+		    ctx.moveTo(this.A.x,this.A.y);
+		    ctx.lineTo(this.B.x2, this.B.y2);
+		    //ctx.closePath();
+		    ctx.strokeStyle = this.color;
+		    ctx.stroke();
+		}
+	}
+}
+
+
+//New Module
+
+var drawingModule = {
+	lastObj: [],
+	variables: {
+		X: "N/A",
+		Y: "N/A",
+		X2: "N/A",
+		Y2: "N/A",
+		X3: "N/A",
+		Y3: "N/A",
+		col: undefined,
+		sel: "N/A"
+	},
+	elements: {
+		iteratable: {
+			X: document.getElementById("X"),
+			Y: document.getElementById("Y"),
+			X2: document.getElementById("X2"),
+			Y2: document.getElementById("Y2"),
+			X3: document.getElementById("X3"),
+			Y3: document.getElementById("Y3")
+		},		
+		add: document.getElementById("add"),
+		col: document.getElementById("col"),
+		sel: document.getElementById("chooseShape")
+	},
+	_displayJust: function(){
+		var els = [];
+		for(var i in drawingModule.elements.iteratable){
+			els.push(drawingModule.elements.iteratable[i].id);
+		}
+		var arr = Array.from(arguments).map(function(m){
+			return m.id;
+		});
+		els.forEach(function(e){
+			if( arr.indexOf(e) >-1 ){
+				document.getElementById(e).style.display = "inline-block";
+				document.getElementsByClassName(e)[0].style.display = "inline-block";
+			} else {
+				document.getElementById(e).style.display = "none";
+				document.getElementsByClassName(e)[0].style.display = "none";
+			}
+		});
+	},
+	_chooseShape: function(yourChoice){
+		var ch;
+		switch(yourChoice){
+			case "rectangle":
+			ch = Object.create(shapes.rectangle);
+			//this._displayJust(X, Y, X2, Y2);
+			break;
+			case "triangle":
+			ch = Object.create(shapes.triangle);
+			//this._displayJust(X, Y, X2, Y2, X3, Y3);
+			break;
+			case "circle":
+			ch = Object.create(shapes.circle);
+			//this._displayJust(X, Y, X2);
+			break;
+			case "line":
+			ch = Object.create(shapes.line);
+			//this._displayJust(X, Y, X2, Y2);
+			break;
+			case "segment":
+			//this._displayJust(X, Y, X2, Y2);
+			ch = Object.create(shapes.segment);
+			break;
+		}
+		return ch;
+	},
+	_eventListeners: function(){
+		var DM = drawingModule;
+		var it = DM.elements.iteratable;
+		var obj;
+		DM.elements.sel.addEventListener('change', function(){//selected shape
+				DM.variables.sel = this.value.toLowerCase();
+				console.log(DM.variables);
+				switch(this.value.toLowerCase()){
+					case "rectangle":
+					DM._displayJust(X, Y, X2, Y2);
+					break;
+					case "triangle":
+					DM._displayJust(X, Y, X2, Y2, X3, Y3);
+					break;
+					case "circle":
+					DM._displayJust(X, Y, X2);
+					break;
+					case "line":
+					DM._displayJust(X, Y, X2, Y2);
+					break;
+					case "segment":
+					DM._displayJust(X, Y, X2, Y2);
+					break;
+				}
+			});
+
+		DM.elements.col.addEventListener('change', function(){//color
+			DM.variables.col = this.value;
+		});
+
+		it.X.addEventListener('change', function(){
+			DM.variables.X = this.value;
+			console.log(DM.variables.X);
+		});
+
+		it.Y.addEventListener('change', function(){
+			DM.variables.Y = this.value;
+		});
+
+		it.X2.addEventListener('change', function(){
+			DM.variables.X2 = this.value;
+		});
+
+		it.Y2.addEventListener('change', function(){
+			DM.variables.Y2 = this.value;
+		});
+
+		it.X3.addEventListener('change', function(){
+			DM.variables.X3 = this.value;
+		});
+
+		it.Y3.addEventListener('change', function(){
+			DM.variables.Y3 = this.value;
+		});
+
+
+		drawingModule.elements.add.addEventListener('click', function(){
+			var vars = DM.variables;
+			event.preventDefault();
+			function initialize(){
+				console.log("eee");
+				if(DM.variables.sel){
+					var obj = DM._chooseShape(vars.sel);
+					console.log(obj);
+					switch(vars.sel){
+						case "rectangle":
+						obj.init(vars.X, vars.Y, vars.X2, vars.Y2, vars.col || "black");
+						break;
+						case "circle":
+						obj.init(vars.X, vars.Y, vars.X2, vars.col  || "black");
+						break;
+						case "triangle":
+						obj.init(vars.X, vars.Y, vars.X2, vars.Y2, vars.X3, vars.Y3, vars.col  || "black");
+						break;
+						case "line":
+						obj.init(vars.X, vars.Y, vars.X2, vars.Y2, vars.col || "black");
+						break;
+						case "segment":
+						obj.init(vars.X, vars.Y, vars.X2, vars.Y2, vars.col || "black");
+						break;
+					}
+					console.log(obj);
+					DM.lastObj.push(obj);
+					obj.draw();
+				}
+			}
+			initialize();
+		});
+
+		document.addEventListener('keydown', function(){
+			if(event.keyCode === 189){
+				ctx.clearRect(0,0,300,300);
+				DM.lastObj.pop();
+				for(var i = 0; i <= DM.lastObj.length-1; i++){
+					DM.lastObj[i].draw();
+				}
+			}
+		});
+
+	},
+	start: function(){
+		drawingModule._eventListeners();
+	}
+};
+
+drawingModule.start();
+
+</script>
+</body>
+</html>
